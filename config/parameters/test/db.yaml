@@ -1,0 +1,4 @@
+# El perfil test no tiene base de datos: las pruebas de build arrancan sin infraestructura, y un
+# repositorio usado aquí falla diciéndolo. El esquema contra un motor real lo juzga db-check.
+database:
+  enabled: false

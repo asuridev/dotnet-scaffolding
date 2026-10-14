@@ -1,0 +1,35 @@
+# Infraestructura de prueba generada por keel-dotnet (según keel-stack.json).
+name: product-catalog-dotnet
+services:
+  db:
+    container_name: product-catalog-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: product_catalog
+      POSTGRES_USER: product_catalog
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - keel-product-catalog
+  devtools:
+    build:
+      context: ./docker
+    image: product-catalog-devtools:81411a3e7eb3
+    container_name: product-catalog-devtools
+    command: sleep infinity
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+    depends_on:
+      - db
+    networks:
+      - keel-product-catalog
+volumes:
+  db-data:
+networks:
+  keel-product-catalog:
+    driver: bridge

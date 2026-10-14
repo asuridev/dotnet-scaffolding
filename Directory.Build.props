@@ -1,0 +1,24 @@
+<Project>
+  <!-- Común a todos los proyectos de la solución. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <!-- Tipos de referencia no nulos por defecto: un null sin declarar es un error de compilación. -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Un warning es un error: lo que el compilador avisa no se acumula. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <!-- La primera restauración escribe packages.lock.json en cada proyecto: commitéalos, y a partir de
+         ahí una restauración en modo bloqueado (la opción locked-mode de dotnet restore) falla si alguien
+         cambia una versión sin querer. Un comentario XML no admite dos guiones seguidos: MSBuild
+         descartaría este archivo entero, sin decir nada. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Avisa de paquetes con vulnerabilidades conocidas, transitivos incluidos. Se quedan en aviso: un
+         CVE publicado mañana no debe impedir compilar hoy, pero tiene que verse. -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,383 @@
+openapi: 3.1.0
+info:
+  title: product-catalog
+  version: 1.1.0
+  description: Gestiona el catálogo de productos publicables de la tienda.
+  x-keel-derived: "Derivado del diseño por el generador (keel-core/gen/openapi.js). No se edita: se regenera con build."
+servers:
+  - url: "{baseUrl}"
+    description: El host y el puerto son parámetro de despliegue, nunca dato de diseño.
+    variables:
+      baseUrl:
+        default: http://localhost:8080
+        description: Raíz del servicio desplegado.
+paths:
+  /api/v1/products:
+    post:
+      operationId: createProduct
+      summary: Da de alta un producto en estado draft.
+      tags:
+        - Product
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+          description: "Clave de idempotencia: repetir la petición con la misma clave no la ejecuta dos veces."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "201":
+          description: Da de alta un producto en estado draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateProductResponseDto"
+          headers:
+            Location:
+              description: "URL del recurso: /api/v1/products/{id}"
+              schema:
+                type: string
+        "400":
+          description: "`VALIDATION_ERROR`: la entrada no cumple el contrato."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: |-
+            `IDEMPOTENCY_KEY_IN_PROGRESS`: otra petición con la misma clave está en curso.
+            `IDEMPOTENCY_KEY_REUSED`: la misma clave con otro contenido.
+            `SKU_ALREADY_EXISTS`: Ya existe un producto con ese sku.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      operationId: listProducts
+      summary: Lista los productos del catálogo paginados.
+      tags:
+        - Product
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: "`campo,asc|desc`; sin él, el orden que declara el diseño."
+      responses:
+        "200":
+          description: Lista los productos del catálogo paginados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedListProductsResponseDto"
+  /api/v1/products/{id}:
+    get:
+      operationId: getProduct
+      summary: Recupera un producto por su identificador.
+      tags:
+        - Product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Recupera un producto por su identificador.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetProductResponseDto"
+        "400":
+          description: "`VALIDATION_ERROR`: la entrada no cumple el contrato."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "`PRODUCT_NOT_FOUND`: No existe un producto con ese id."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/products/{id}/activate:
+    post:
+      operationId: activateProduct
+      summary: Publica un producto en borrador; solo con un precio mayor que cero.
+      tags:
+        - Product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Publica un producto en borrador; solo con un precio mayor que cero.
+        "400":
+          description: "`VALIDATION_ERROR`: la entrada no cumple el contrato."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "`PRODUCT_NOT_FOUND`: No existe un producto con ese id."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: "`PRODUCT_NOT_DRAFT`: El producto no está en draft."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "`PRODUCT_PRICE_NOT_POSITIVE`: El precio del producto es cero."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/products/{id}/retire:
+    post:
+      operationId: retireProduct
+      summary: Retira un producto del catálogo de forma definitiva.
+      tags:
+        - Product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Retira un producto del catálogo de forma definitiva.
+        "400":
+          description: "`VALIDATION_ERROR`: la entrada no cumple el contrato."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "`PRODUCT_NOT_FOUND`: No existe un producto con ese id."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: "`PRODUCT_ALREADY_RETIRED`: El producto ya está retired."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    CreateProductRequest:
+      type: object
+      properties:
+        sku:
+          type: string
+          minLength: 1
+          pattern: ^[A-Z]{3}-[0-9]{4}$
+          maxLength: 8
+        name:
+          type: string
+          minLength: 1
+          pattern: \S
+          maxLength: 120
+        notes:
+          type: string
+        price:
+          $ref: "#/components/schemas/Money"
+        apiToken:
+          type: string
+          description: Token de sincronización con el proveedor; nunca se expone.
+      required:
+        - sku
+        - name
+        - price
+    CreateProductResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        notes:
+          type:
+            - string
+            - "null"
+        price:
+          $ref: "#/components/schemas/Money"
+        status:
+          $ref: "#/components/schemas/ProductStatus"
+      required:
+        - id
+        - sku
+        - name
+        - notes
+        - price
+        - status
+      additionalProperties: false
+    ErrorResponse:
+      type: object
+      description: "El cuerpo de error del contrato del cable: lleva siempre todos sus campos."
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        code:
+          type:
+            - string
+            - "null"
+        message:
+          type: string
+        details:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+        correlationId:
+          type:
+            - string
+            - "null"
+      required:
+        - timestamp
+        - status
+        - error
+        - code
+        - message
+        - details
+        - correlationId
+    GetProductResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        notes:
+          type:
+            - string
+            - "null"
+        price:
+          $ref: "#/components/schemas/Money"
+        status:
+          $ref: "#/components/schemas/ProductStatus"
+      required:
+        - id
+        - sku
+        - name
+        - notes
+        - price
+        - status
+      additionalProperties: false
+    ListProductsResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        notes:
+          type:
+            - string
+            - "null"
+        price:
+          $ref: "#/components/schemas/Money"
+        status:
+          $ref: "#/components/schemas/ProductStatus"
+      required:
+        - id
+        - sku
+        - name
+        - notes
+        - price
+        - status
+      additionalProperties: false
+    Money:
+      type: object
+      properties:
+        amount:
+          type: number
+          description: "Decimal exacto: viaja con su escala y en notación plana (2.50, nunca 2.5 ni 1E-7)."
+        currency:
+          type: string
+      required:
+        - amount
+        - currency
+    PagedListProductsResponseDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ListProductsResponseDto"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+      required:
+        - items
+        - page
+        - size
+        - totalElements
+        - totalPages
+      additionalProperties: false
+    ProductStatus:
+      type: string
+      enum:
+        - draft
+        - active
+        - retired
+      description: Estados de publicación de un producto.
+security: []

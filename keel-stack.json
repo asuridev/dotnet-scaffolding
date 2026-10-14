@@ -1,0 +1,9 @@
+{
+  "database": "postgresql",
+  "broker": null,
+  "auth": null,
+  "cache": null,
+  "storage": null,
+  "paymentGateway": null,
+  "telemetry": "none"
+}

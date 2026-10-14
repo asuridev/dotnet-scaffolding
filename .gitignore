@@ -1,0 +1,11 @@
+# Salidas de compilación y de pruebas
+bin/
+obj/
+TestResults/
+build/
+
+# Editores
+.vs/
+.idea/
+*.user
+*.suo

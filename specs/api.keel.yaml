@@ -1,0 +1,16 @@
+style: rest
+basePath: /api
+auto: true
+endpoints:
+  activateProduct:
+    method: POST
+    path: /products/{id}/activate
+    successStatus: 204
+  retireProduct:
+    method: POST
+    path: /products/{id}/retire
+    successStatus: 204
+pagination:
+  style: offset
+  defaultSize: 20
+  maxSize: 100

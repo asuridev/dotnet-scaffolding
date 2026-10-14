@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- xUnit v3: el proyecto de pruebas es un ejecutable. -->
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- No lo ejecuta dotnet test: sus casos necesitan la infraestructura de infra/, y dotnet test en la raíz tiene
+         que seguir pasando sin nada más. Lo ejecuta infra/score-scenarios.sh, con el runner propio de xUnit v3
+         (Microsoft.Testing.Platform desactivado: es lo que mira dotnet test para elegir proyectos). -->
+    <IsTestProject>false</IsTestProject>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+  </PropertyGroup>
+
+  <!-- Caja negra: el Api se COMPILA antes que este proyecto (el arnés lo arranca como proceso), pero ninguno de sus
+       tipos es visible aquí. Una prueba de flujo que nombre un tipo del servicio no compila. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ProductCatalog.Api\ProductCatalog.Api.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- La configuración de la compilación viaja en el ensamblado: el arnés arranca el Api compilado con la misma. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>Configuration</_Parameter1>
+      <_Parameter2>$(Configuration)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+</Project>

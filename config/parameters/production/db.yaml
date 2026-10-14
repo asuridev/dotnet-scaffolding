@@ -1,0 +1,20 @@
+database:
+  # La URL JDBC de keel-spring vale tal cual (jdbc:postgresql://host:puerto/base): el mismo .env sirve para los
+  # tres servidores del diseño.
+  url: ${DB_URL}
+  username: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+  pool:
+    # El nombre de la aplicación en pg_stat_activity: con el de por defecto, dos servicios en el mismo backend no
+    # se distinguen.
+    name: product-catalog-pool
+    max-size: ${DB_POOL_MAX_SIZE:10}
+    # Cuánto espera una petición a que haya conexión libre: fallar rápido con el pool agotado en vez de acumular
+    # peticiones que el cliente ya abandonó.
+    connection-timeout-ms: ${DB_POOL_CONNECTION_TIMEOUT_MS:5000}
+    # Vida máxima de una conexión: menor que cualquier corte de ociosas entre el servicio y la base.
+    max-lifetime-ms: ${DB_POOL_MAX_LIFETIME_MS:1800000}
+  # Tope de cada transacción; lo cancelado sale como 503 TRANSACTION_TIMEOUT.
+  transaction-timeout: ${DB_TRANSACTION_TIMEOUT:30s}
+  # Al arrancar se aplican las migraciones pendientes del proyecto Infrastructure (el baseline lo crea el pase de calidad).
+  schema: migrate

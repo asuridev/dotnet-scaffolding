@@ -1,0 +1,13 @@
+# Configuración común a todos los perfiles. Los valores de cada perfil van en
+# config/parameters/<perfil>/*.yaml. Placeholders: ${VAR} obligatoria, ${VAR:default} opcional.
+application:
+  name: product-catalog
+server:
+  # Puerto por variable de entorno; 8080 es el que asumen los escenarios de validación.
+  port: ${SERVER_PORT:8080}
+  # Todas las interfaces, como los servidores de keel-spring y keel-nest (también SERVER_ADDRESS):
+  # dentro de un contenedor, escuchar solo en localhost dejaría el servicio inalcanzable.
+  address: ${SERVER_ADDRESS:0.0.0.0}
+  # Apagado ordenado: al recibir SIGTERM /readyz pasa a OUT_OF_SERVICE, el servidor deja de aceptar
+  # conexiones y espera como máximo este margen a que terminen las peticiones en vuelo.
+  shutdown-timeout: ${SHUTDOWN_TIMEOUT:30s}

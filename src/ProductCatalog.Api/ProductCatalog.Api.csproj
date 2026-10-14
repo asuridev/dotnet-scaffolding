@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ProductCatalog.Infrastructure\ProductCatalog.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- La configuración por perfiles vive en config/ de la raíz del repo, el mismo formato que los otros
+       generadores; viaja junto al ejecutable, y la leen también las pruebas, que referencian este proyecto. -->
+  <ItemGroup>
+    <None Include="..\..\config\**\*.yaml" LinkBase="config" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
